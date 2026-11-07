@@ -6,7 +6,7 @@ import random
 # 1. PAGE CONFIGURATION & THEME STYLING
 # ==========================================
 st.set_page_config(
-    page_title="HYPERION CLOUD // SECURE TERMINAL",
+    page_title="HYPERION CLOUD // TEAM GAME",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -100,6 +100,7 @@ st.markdown(f"""
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
 if "username" not in st.session_state: st.session_state.username = ""
 if "is_saboteur" not in st.session_state: st.session_state.is_saboteur = False
+if "designated_saboteurs" not in st.session_state: st.session_state.designated_saboteurs = "Alex, Jordan"
 if "team_score" not in st.session_state: st.session_state.team_score = 1250
 if "system_integrity" not in st.session_state: st.session_state.system_integrity = 88.4
 if "act_2_active" not in st.session_state: st.session_state.act_2_active = False
@@ -114,33 +115,39 @@ if "logs" not in st.session_state:
     st.session_state.logs = [
         "[09:00:12] - GITHUB HOOK: Main repository branch merged by @dev_lead.",
         "[10:14:20] - KUBERNETES POD: Cluster US-East autoscaled successfully.",
-        "[11:05:00] - ANOMALY: Latency spike detected on Redis cache node 3."
+        "[11:05:00] - NOTICE: Minor latency spike detected on Redis cache node 3."
     ]
 
 # ==========================================
 # 3. AUTHENTICATION GATE
 # ==========================================
 if not st.session_state.logged_in:
-    st.markdown("# [SYS_ID: HYPERION_CLOUD // SECURE GATEWAY]")
+    st.markdown("# [HYPERION CLOUD // TEAM PORTAL]")
     st.markdown("---")
     
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown("### ENGINEER IDENTIFICATION REQUIRED")
-        input_name = st.text_input("ENTER ENGINEER CODENAME:")
-        input_pin = st.text_input("ENTER ACCESS TOKEN:", type="password")
-        secret_saboteur_toggle = st.checkbox("[DEBUG] FLAG AS ACTIVE HACKER / MOLE")
+        st.markdown("### ENTER YOUR DETAILS TO JOIN")
+        input_name = st.text_input("YOUR NAME / CODENAME:")
+        input_pin = st.text_input("ACCESS PIN (ANYTHING WORKS):", type="password")
 
-        if st.button("ESTABLISH SSH TUNNEL"):
+        if st.button("CONNECT TO DASHBOARD"):
             if input_name.strip() != "":
-                st.session_state.username = input_name
+                st.session_state.username = input_name.strip()
                 st.session_state.logged_in = True
-                st.session_state.is_saboteur = secret_saboteur_toggle
+                
+                # Automatically check if this user is designated as a saboteur by the host
+                sab_list = [s.strip().lower() for s in st.session_state.designated_saboteurs.split(",")]
+                if st.session_state.username.lower() in sab_list:
+                    st.session_state.is_saboteur = True
+                else:
+                    st.session_state.is_saboteur = False
+                    
                 st.rerun()
             else:
-                st.error("ACCESS DENIED: Enter a valid engineer codename.")
+                st.error("Please enter a name to continue.")
     with col2:
-        st.info("Welcome, Engineer. Protect the microservice architecture, debug routing errors, and secure our Series B infrastructure.")
+        st.info("Welcome! Collaborate on server routing puzzles, solve daily audits, and keep our startup infrastructure running smoothly.")
     st.stop()
 
 # ==========================================
@@ -148,28 +155,38 @@ if not st.session_state.logged_in:
 # ==========================================
 st.sidebar.markdown(f"### [USER: {st.session_state.username.upper()}]")
 if st.session_state.is_saboteur:
-    st.sidebar.error("CLEARANCE: LEVEL 5 // [ROGUE HACKER]")
+    st.sidebar.warning("ROLE: [INSIDER TROUBLEMAKER]")
 else:
-    st.sidebar.success("CLEARANCE: LEVEL 2 // [SYSTEM ENGINEER]")
+    st.sidebar.success("ROLE: [SYSTEM ENGINEER]")
 
 st.sidebar.markdown("---")
 
-nav_options = ["MISSION CONTROL", "CLOUD ROUTING MATRIX (PUZZLE)", "DAILY SECURITY AUDIT", "INTEL LEADERBOARD"]
+nav_options = ["MISSION CONTROL", "CLOUD ROUTING PUZZLE", "DAILY TEAM CHECK-IN", "LEADERBOARD"]
 if st.session_state.act_2_active:
     nav_options.append("🚨 ACT 2: WOPR // NORAD CONSOLE")
 
-nav_choice = st.sidebar.radio("NAVIGATION CONSOLE", nav_options)
+nav_choice = st.sidebar.radio("NAVIGATION", nav_options)
 
 st.sidebar.markdown("---")
-# Host toggle for Act 2 escalation
-host_act2_toggle = st.sidebar.toggle("ACTIVATE ACT 2 (WARGAMES ESCALATION)", value=st.session_state.act_2_active)
-if host_act2_toggle != st.session_state.act_2_active:
-    st.session_state.act_2_active = host_act2_toggle
-    if host_act2_toggle:
-        st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] CRITICAL: External backdoor routed to NORAD WOPR mainframe.")
-    st.rerun()
 
-if st.sidebar.button("TERMINATE SESSION"):
+# ==========================================
+# HOST-ONLY SECRET CONTROLS
+# ==========================================
+if st.session_state.username.upper() == "HOST":
+    st.sidebar.markdown("### [HOST ADMIN PANEL]")
+    st.session_state.designated_saboteurs = st.sidebar.text_input(
+        "Saboteur Names (comma-separated):", 
+        value=st.session_state.designated_saboteurs
+    )
+    
+    host_act2_toggle = st.sidebar.toggle("ACTIVATE ACT 2 (WARGAMES FINALE)", value=st.session_state.act_2_active)
+    if host_act2_toggle != st.session_state.act_2_active:
+        st.session_state.act_2_active = host_act2_toggle
+        if host_act2_toggle:
+            st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] NOTICE: Server traffic dynamically rerouted to NORAD WOPR mainframe.")
+        st.rerun()
+
+if st.sidebar.button("LOG OUT"):
     st.session_state.logged_in = False
     st.rerun()
 
@@ -179,53 +196,53 @@ if st.sidebar.button("TERMINATE SESSION"):
 if nav_choice == "MISSION CONTROL":
     if st.session_state.act_2_active:
         st.markdown("# [NORAD DEFENSE // ACT 2 ACTIVE]")
-        st.warning("⚠️ WARNING: Terminal linked to military supercomputer simulation. DEFCON escalation in progress.")
+        st.warning("⚠️ ALERT: Systems linked to military simulation. Threat escalation in progress.")
     elif st.session_state.is_saboteur:
-        st.markdown("# [ROOT ACCESS // HACKER CONSOLE]")
-        st.error("WARNING: Root privileges active. You are embedded as the System Saboteur.")
+        st.markdown("# [INSIDER CONSOLE // HYPERION CLOUD]")
+        st.info("You have the secret troublemaker toolkit enabled. Use your panel below to test the team's problem-solving speed!")
     else:
-        st.markdown("# [SYS_ID: HYPERION_CLOUD // MISSION CONTROL]")
+        st.markdown("# [HYPERION CLOUD // MISSION CONTROL]")
     
     st.markdown("---")
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric(label="SERVER UPTIME FUND", value=f"{st.session_state.team_score} PTS")
+        st.metric(label="UPTIME FUND", value=f"{st.session_state.team_score} PTS")
     with col2:
-        st.metric(label="CLUSTER INTEGRITY", value=f"{st.session_state.system_integrity}%")
+        st.metric(label="CLUSTER HEALTH", value=f"{st.session_state.system_integrity}%")
     with col3:
         status_label = "DEFCON 1 // CRITICAL" if st.session_state.defcon_level == 1 else "NOMINAL"
         st.metric(label="THREAT STATUS", value=f"DEFCON {st.session_state.defcon_level}" if st.session_state.act_2_active else status_label)
 
-    st.markdown("### LIVE SERVER TELEMETRY LOG FEED")
+    st.markdown("### LIVE SERVER ACTIVITY FEED")
     log_html = "<br>".join(st.session_state.logs)
     st.markdown(f'<div class="terminal-log">{log_html}</div>', unsafe_allow_html=True)
 
-    # Saboteur / Hacker Payload Panel
+    # Insider Trouble Panel
     if st.session_state.is_saboteur:
         st.markdown("---")
-        st.markdown("### 🔴 HACKER PAYLOAD DECK")
+        st.markdown("### 🤹 TROUBLEMAKER CONTROL PANEL")
         col_h1, col_h2 = st.columns(2)
         with col_h1:
-            if st.button("[EXECUTE: INJECT API CORRUPTION]"):
+            if st.button("[TRIGGER: COFFEE SPILL ON SERVER RACK]"):
                 st.session_state.system_integrity = max(10.0, st.session_state.system_integrity - 7.5)
-                st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] ANOMALY: Malicious commit injected by rogue process.")
+                st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] GLITCH: Coffee spill reported near Node 2.")
                 st.rerun()
         with col_h2:
-            if st.button("[ESCALATE DEFCON LEVEL]"):
+            if st.button("[TRIGGER: ESCALATED IT ALERT]"):
                 if st.session_state.defcon_level > 1:
                     st.session_state.defcon_level -= 1
-                    st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] ALERT: DEFCON escalated to {st.session_state.defcon_level}.")
+                    st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] ALERT: Threat level escalated to DEFCON {st.session_state.defcon_level}.")
                     st.rerun()
 
 # ==========================================
-# 6. VIEW 2: CLOUD ROUTING MATRIX (PUZZLE)
+# 6. VIEW 2: CLOUD ROUTING PUZZLE
 # ==========================================
-elif nav_choice == "CLOUD ROUTING MATRIX (PUZZLE)":
-    st.markdown("# [ACTIVE MISSION // CLOUD SERVER ROUTING MATRIX]")
+elif nav_choice == "CLOUD ROUTING PUZZLE":
+    st.markdown("# [TEAM PUZZLE // CLOUD ROUTING MATRIX]")
     st.markdown("---")
     st.markdown("""
-    **Directive:** A rogue push to the main repository has scrambled our microservice routing tables. Read the deployment clues below and match each region to its correct database shard to restore server stability.
+    **Challenge:** A recent repository update scrambled our microservice routing table. Read the clues below and match each region to its correct service to restore full system stability!
     
     *Deployment Clues:*
     1. The Auth Service Shard is NOT hosted on the AWS US-East node.
@@ -238,39 +255,39 @@ elif nav_choice == "CLOUD ROUTING MATRIX (PUZZLE)":
         node_eu = st.selectbox("GCP Europe Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"])
         node_asia = st.selectbox("Azure Asia-South Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"])
         
-        submit_puzzle = st.form_submit_button("[VERIFY ROUTING INTEGRITY]")
+        submit_puzzle = st.form_submit_button("[VERIFY ROUTING FIX]")
         if submit_puzzle:
             if node_eu == "Billing API" and node_asia == "Redis Cache" and node_us != "Auth Service Shard":
                 st.session_state.system_integrity = min(100.0, st.session_state.system_integrity + 15.0)
                 st.session_state.team_score += 250
-                st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [OK] Server routing fixed by {st.session_state.username}.")
-                st.success("ACCESS GRANTED: Microservice architecture restored! +250 Points.")
+                st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [OK] Routing puzzle solved by {st.session_state.username}.")
+                st.success("GREAT JOB: Microservice architecture successfully restored! +250 Points.")
             else:
-                st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [X] FAILED: Routing collision triggered by {st.session_state.username}.")
-                st.error("ACCESS DENIED: Routing collision detected. Server latency spiking.")
+                st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [X] MISMATCH: Routing error triggered by {st.session_state.username}.")
+                st.error("NOT QUITE: Routing mismatch detected. Try checking the clues again!")
 
 # ==========================================
-# 7. VIEW 3: DAILY SECURITY AUDIT
+# 7. VIEW 3: DAILY TEAM CHECK-IN
 # ==========================================
-elif nav_choice == "DAILY SECURITY AUDIT":
-    st.markdown("# [END-OF-SHIFT SECURITY AUDIT]")
+elif nav_choice == "DAILY TEAM CHECK-IN":
+    st.markdown("# [DAILY TEAM CHECK-IN]")
     st.markdown("---")
     with st.form("audit_form"):
-        suspect = st.selectbox("Primary suspect for active Hacker/Mole:", ["Engineer Alex", "Engineer Jordan", "Engineer Taylor", "Unknown"])
-        confidence = st.slider("Confidence rating (1-10):", 1, 10, 5)
-        notes = st.text_input("Engineering notes:")
-        if st.form_submit_button("[SUBMIT DAILY AUDIT]"):
-            st.success("Audit locked successfully.")
+        suspect = st.selectbox("Who do you suspect caused today's server hiccup?", ["Colleague Alex", "Colleague Jordan", "Colleague Taylor", "Pure Coincidence"])
+        confidence = st.slider("How confident are you? (1-10):", 1, 10, 5)
+        notes = st.text_input("Any funny observations or theories:")
+        if st.form_submit_button("[SUBMIT CHECK-IN]"):
+            st.success("Check-in recorded successfully.")
 
 # ==========================================
-# 8. VIEW 4: INTEL LEADERBOARD
+# 8. VIEW 4: LEADERBOARD
 # ==========================================
-elif nav_choice == "INTEL LEADERBOARD":
-    st.markdown("# [GLOBAL INTEL WALL // LEADERBOARD]")
+elif nav_choice == "LEADERBOARD":
+    st.markdown("# [TEAM INTEL LEADERBOARD]")
     st.markdown("---")
     df = pd.DataFrame([
-        {"Engineer": "Engineer Jordan", "Detective Score": 840},
-        {"Engineer": "Engineer Taylor", "Detective Score": 720},
+        {"Engineer": "Colleague Jordan", "Detective Score": 840},
+        {"Engineer": "Colleague Taylor", "Detective Score": 720},
         {"Engineer": f"{st.session_state.username} (You)", "Detective Score": 650},
     ])
     st.dataframe(df, use_container_width=True, hide_index=True)
@@ -292,19 +309,19 @@ elif nav_choice == "🚨 ACT 2: WOPR // NORAD CONSOLE":
             <h3>DEFCON THREAT LEVEL: {st.session_state.defcon_level}</h3>
             <p>SIMULATION: GLOBAL THERMONUCLEAR STRIKE</p>
             <hr style="border-color: {'#ff0033' if is_defcon_1 else '#00ff66'}">
-            <p><b>WARNING:</b> If DEFCON reaches 1, simulation lockdown is absolute and hackers win.</p>
+            <p><b>WARNING:</b> If DEFCON reaches 1, simulation lockdown is absolute and the troublemakers win.</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("### EMERGENCY OVERRIDES")
-        if st.button("[DE-ESCALATE DEFCON LEVEL]"):
+        if st.button("[RESTORE DEFCON LEVEL]"):
             if st.session_state.defcon_level < 5:
                 st.session_state.defcon_level += 1
                 st.session_state.wopr_logs.append(f"> OVERRIDE: DEFCON restored to {st.session_state.defcon_level}.")
                 st.rerun()
-        if st.button("[INJECT HOSTILE LAUNCH CODE]"):
+        if st.button("[TRIGGER SIMULATION DRILL]"):
             st.session_state.defcon_level = 1
-            st.session_state.wopr_logs.append("> CRITICAL: Hostile launch sequence authorized. DEFCON 1 REACHED.")
+            st.session_state.wopr_logs.append("> CRITICAL: Hostile simulation drill initiated. DEFCON 1 REACHED.")
             st.rerun()
 
     with col2:
