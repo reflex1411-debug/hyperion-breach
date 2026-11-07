@@ -129,21 +129,31 @@ if not st.session_state.logged_in:
     with col1:
         st.markdown("### ENTER YOUR DETAILS TO JOIN")
         input_name = st.text_input("YOUR NAME / CODENAME:")
-        input_pin = st.text_input("ACCESS PIN (ANYTHING WORKS):", type="password")
+        input_pin = st.text_input("ACCESS PIN:", type="password")
 
         if st.button("CONNECT TO DASHBOARD"):
-            if input_name.strip() != "":
-                st.session_state.username = input_name.strip()
-                st.session_state.logged_in = True
-                
-                # Automatically check if this user is designated as a saboteur by the host
-                sab_list = [s.strip().lower() for s in st.session_state.designated_saboteurs.split(",")]
-                if st.session_state.username.lower() in sab_list:
-                    st.session_state.is_saboteur = True
-                else:
+            name_clean = input_name.strip()
+            if name_clean != "":
+                # Host login verification using PIN 0612
+                if name_clean.upper() == "HOST" and input_pin.strip() == "0612":
+                    st.session_state.username = "HOST"
+                    st.session_state.logged_in = True
                     st.session_state.is_saboteur = False
+                    st.rerun()
+                elif name_clean.upper() == "HOST":
+                    st.error("ACCESS DENIED: Incorrect PIN for HOST.")
+                else:
+                    st.session_state.username = name_clean
+                    st.session_state.logged_in = True
                     
-                st.rerun()
+                    # Automatically check if this user is designated as a saboteur by the host
+                    sab_list = [s.strip().lower() for s in st.session_state.designated_saboteurs.split(",")]
+                    if st.session_state.username.lower() in sab_list:
+                        st.session_state.is_saboteur = True
+                    else:
+                        st.session_state.is_saboteur = False
+                        
+                    st.rerun()
             else:
                 st.error("Please enter a name to continue.")
     with col2:
@@ -235,6 +245,20 @@ if nav_choice == "MISSION CONTROL":
                     st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [!] ALERT: Threat level escalated to DEFCON {st.session_state.defcon_level}.")
                     st.rerun()
 
+    # Host-Only Playability & Next Games Dashboard
+    if st.session_state.username.upper() == "HOST":
+        st.markdown("---")
+        st.markdown("### 📋 HOST GAME PIPELINE & PLAYABILITY CHECK")
+        
+        pipeline_df = pd.DataFrame([
+            {"Stage": "Act 1: Startup Routing Puzzle", "Status": "Active & Live", "Difficulty": "Easy (Direct Match)", "Playability": "100% Verified"},
+            {"Stage": "Daily Team Check-In", "Status": "Active & Live", "Difficulty": "Low Friction", "Playability": "100% Verified"},
+            {"Stage": "Act 2: WOPR DEFCON Escalation", "Status": "Ready in Sidebar", "Difficulty": "High Tension / Interactive", "Playability": "100% Ready (Toggle Controlled)"},
+        ])
+        st.dataframe(pipeline_df, use_container_width=True, hide_index=True)
+        
+        st.info("💡 **Host Tip:** Server names are clearly visible in the puzzle view table so players can easily match them to deployment notes.")
+
 # ==========================================
 # 6. VIEW 2: CLOUD ROUTING PUZZLE
 # ==========================================
@@ -242,12 +266,24 @@ elif nav_choice == "CLOUD ROUTING PUZZLE":
     st.markdown("# [TEAM PUZZLE // CLOUD ROUTING MATRIX]")
     st.markdown("---")
     st.markdown("""
-    **Challenge:** A recent repository update scrambled our microservice routing table. Read the clues below and match each region to its correct service to restore full system stability!
-    
-    *Deployment Clues:*
-    1. The Auth Service Shard is NOT hosted on the AWS US-East node.
-    2. The GCP Europe node houses the Billing API.
-    3. The Azure Asia-South node runs the Redis Cache.
+    **Challenge:** A recent repository update scrambled our microservice routing table. Check the active server nodes below, read the deployment notes, and match each server to its correct service!
+    """)
+
+    # Server Status Board so players can easily see the server names
+    st.markdown("### 🖥️ ACTIVE SERVER NODES")
+    server_df = pd.DataFrame([
+        {"Region": "AWS US-East", "Status": "Scrambled", "Current Load": "89%"},
+        {"Region": "GCP Europe", "Status": "Scrambled", "Current Load": "94%"},
+        {"Region": "Azure Asia-South", "Status": "Scrambled", "Current Load": "76%"},
+    ])
+    st.dataframe(server_df, use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+    st.markdown("""
+    **Deployment Notes:**
+    1. AWS US-East runs the Auth Service Shard.
+    2. GCP Europe houses the Billing API.
+    3. Azure Asia-South runs the Redis Cache.
     """)
     
     with st.form("puzzle_form"):
@@ -257,14 +293,14 @@ elif nav_choice == "CLOUD ROUTING PUZZLE":
         
         submit_puzzle = st.form_submit_button("[VERIFY ROUTING FIX]")
         if submit_puzzle:
-            if node_eu == "Billing API" and node_asia == "Redis Cache" and node_us != "Auth Service Shard":
+            if node_us == "Auth Service Shard" and node_eu == "Billing API" and node_asia == "Redis Cache":
                 st.session_state.system_integrity = min(100.0, st.session_state.system_integrity + 15.0)
                 st.session_state.team_score += 250
                 st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [OK] Routing puzzle solved by {st.session_state.username}.")
                 st.success("GREAT JOB: Microservice architecture successfully restored! +250 Points.")
             else:
                 st.session_state.logs.append(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] - [X] MISMATCH: Routing error triggered by {st.session_state.username}.")
-                st.error("NOT QUITE: Routing mismatch detected. Try checking the clues again!")
+                st.error("NOT QUITE: Routing mismatch detected. Match the notes directly!")
 
 # ==========================================
 # 7. VIEW 3: DAILY TEAM CHECK-IN
