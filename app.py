@@ -25,6 +25,7 @@ def get_shared_game_state():
         "defcon_level": 5,
         "designated_saboteurs": "Alex, Jordan",
         "votes": {},
+        "solved_incidents": [],
         "logs": [
             "[09:00:12] - GITHUB HOOK: Main repository branch merged by @dev_lead.",
             "[10:14:20] - KUBERNETES POD: Cluster US-East autoscaled successfully.",
@@ -136,7 +137,7 @@ if not st.session_state.logged_in:
         if st.button("CONNECT TO DASHBOARD"):
             name_clean = input_name.strip()
             if name_clean != "":
-                # Host login check using PIN 0612
+                # Host login verification using PIN 0612
                 if name_clean.upper() == "HOST" and input_pin.strip() == "0612":
                     st.session_state.username = "HOST"
                     st.session_state.logged_in = True
@@ -148,7 +149,7 @@ if not st.session_state.logged_in:
                     st.session_state.username = name_clean
                     st.session_state.logged_in = True
                     
-                    # Check if user is in the host's designated saboteur list
+                    # Check if user is in host's designated saboteur list
                     sab_list = [s.strip().lower() for s in game["designated_saboteurs"].split(",")]
                     if st.session_state.username.lower() in sab_list:
                         st.session_state.is_saboteur = True
@@ -159,7 +160,7 @@ if not st.session_state.logged_in:
             else:
                 st.error("Please enter a name to continue.")
     with col2:
-        st.info("Collaborate on server routing puzzles, cast daily accusations, and keep our startup infrastructure running smoothly.")
+        st.info("Collaborate on live IT incident queues, cast daily accusations, and keep our startup infrastructure online.")
     st.stop()
 
 # ==========================================
@@ -173,7 +174,7 @@ else:
 
 st.sidebar.markdown("---")
 
-nav_options = ["MISSION CONTROL", "CLOUD ROUTING PUZZLE", "ACCUSATION & VOTING", "LEADERBOARD"]
+nav_options = ["MISSION CONTROL", "ACTIVE IT INCIDENTS (PUZZLES)", "ACCUSATION & VOTING", "LEADERBOARD"]
 if game["act_2_active"]:
     nav_options.append("🚨 ACT 2: WOPR // NORAD CONSOLE")
 
@@ -209,7 +210,7 @@ if nav_choice == "MISSION CONTROL":
         st.warning("⚠️ ALERT: Systems linked to military simulation. Threat escalation in progress.")
     elif st.session_state.is_saboteur:
         st.markdown("# [INSIDER CONSOLE // HYPERION CLOUD]")
-        st.info("Your troublemaker toolkit is active. Use your secret controls below to inject glitches and test the team!")
+        st.info("Your troublemaker toolkit is active. Use your secret controls below to disrupt active IT incidents and test the team!")
     else:
         st.markdown("# [HYPERION CLOUD // MISSION CONTROL]")
     
@@ -225,23 +226,24 @@ if nav_choice == "MISSION CONTROL":
             status_label = "DEFCON 1 // CRITICAL" if game["defcon_level"] == 1 else f"DEFCON {game['defcon_level']}"
             st.metric(label="THREAT STATUS", value=status_label)
         else:
-            st.metric(label="SYSTEM STATUS", value="NOMINAL")
+            resolved_count = len(game["solved_incidents"])
+            st.metric(label="INCIDENTS RESOLVED", value=f"{resolved_count} / 3")
 
     st.markdown("### LIVE SHARED SERVER ACTIVITY FEED")
     log_html = "<br>".join(game["logs"])
     st.markdown(f'<div class="terminal-log">{log_html}</div>', unsafe_allow_html=True)
 
-    # Saboteur Action Panel (Broadcasting live to all players)
+    # Saboteur Targetable Disruption Panel
     if st.session_state.is_saboteur:
         st.markdown("---")
-        st.markdown("### 🤹 TROUBLEMAKER CONTROL PANEL (SECRET)")
+        st.markdown("### 🤹 TROUBLEMAKER DISRUPTION PANEL (SECRET)")
         
         col_h1, col_h2 = st.columns(2)
         with col_h1:
-            if st.button("[TRIGGER: COFFEE SPILL ON SERVER RACK]"):
-                game["system_integrity"] = max(10.0, game["system_integrity"] - 12.5)
-                game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [!] GLITCH: Coffee spill reported near Node 2 by an unknown source. Integrity compromised.")
-                st.success("Sabotage executed! Cluster health dropped for everyone.")
+            if st.button("[DISRUPT: COFFEE SPILL ON SERVER RACK]"):
+                game["system_integrity"] = max(10.0, game["system_integrity"] - 10.0)
+                game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [!] GLITCH: Coffee spill reported near Node 2 by an unknown source.")
+                st.success("Disruption sent! Cluster health dropped across all screens.")
                 st.rerun()
         with col_h2:
             if game["act_2_active"]:
@@ -252,64 +254,104 @@ if nav_choice == "MISSION CONTROL":
                         st.success("DEFCON escalated!")
                         st.rerun()
             else:
-                if st.button("[TRIGGER: PUSH BAD PULL REQUEST]"):
-                    game["system_integrity"] = max(10.0, game["system_integrity"] - 15.0)
-                    game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [!] ERROR: Unauthorized breaking commit merged into main branch.")
-                    st.success("Bad commit pushed! Team health dropped.")
-                    st.rerun()
+                if st.button("[RE-SCRAMBLE A RESOLVED INCIDENT]"):
+                    if game["solved_incidents"]:
+                        removed = game["solved_incidents"].pop()
+                        game["system_integrity"] = max(10.0, game["system_integrity"] - 15.0)
+                        game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [!] ALERT: Sabotage detected! '{removed}' has been re-scrambled!")
+                        st.success(f"Successfully re-scrambled {removed}!")
+                        st.rerun()
+                    else:
+                        st.warning("No incidents have been resolved by the team yet to sabotage!")
 
     # Host Playability Dashboard
     if st.session_state.username.upper() == "HOST":
         st.markdown("---")
         st.markdown("### 📋 HOST GAME PIPELINE & PLAYABILITY CHECK")
         pipeline_df = pd.DataFrame([
-            {"Stage": "Act 1: Startup Routing Puzzle", "Status": "Active & Live", "Difficulty": "Direct Match (Easy)", "Playability": "100% Synchronized"},
-            {"Stage": "Accusation & Voting Board", "Status": "Active & Live", "Difficulty": "Social Deduction", "Playability": "100% Real-Time"},
-            {"Stage": "Act 2: WOPR DEFCON Escalation", "Status": "Ready in Sidebar", "Difficulty": "High Tension", "Playability": "Toggle Controlled"},
+            {"Stage": "Incident #1: Routing Matrix", "Status": "Active in Queue", "Difficulty": "Easy", "Playability": "Verified"},
+            {"Stage": "Incident #2: SSL Cert Expiry", "Status": "Active in Queue", "Difficulty": "Medium", "Playability": "Verified"},
+            {"Stage": "Incident #3: Memory Leak", "Status": "Active in Queue", "Difficulty": "Medium", "Playability": "Verified"},
+            {"Stage": "Act 2: WOPR Escalation", "Status": "Ready in Sidebar", "Difficulty": "High Tension", "Playability": "Toggle Controlled"},
         ])
         st.dataframe(pipeline_df, use_container_width=True, hide_index=True)
 
 # ==========================================
-# 7. VIEW 2: CLOUD ROUTING PUZZLE
+# 7. VIEW 2: ACTIVE IT INCIDENTS (SERIES OF PUZZLES)
 # ==========================================
-elif nav_choice == "CLOUD ROUTING PUZZLE":
-    st.markdown("# [TEAM PUZZLE // CLOUD ROUTING MATRIX]")
+elif nav_choice == "ACTIVE IT INCIDENTS (PUZZLES)":
+    st.markdown("# [ACTIVE IT INCIDENT QUEUE]")
     st.markdown("---")
     st.markdown("""
-    **Challenge:** A recent repository update scrambled our microservice routing table. Check the active server nodes below, read the deployment notes, and match each server to its correct service to restore team health!
+    Work together as a team to diagnose and patch these active infrastructure failures. Each resolved incident restores cluster health and awards Uptime Points!
     """)
 
-    st.markdown("### 🖥️ ACTIVE SERVER NODES")
-    server_df = pd.DataFrame([
-        {"Region": "AWS US-East", "Status": "Scrambled", "Current Load": f"{round(100 - game['system_integrity'])}%"},
-        {"Region": "GCP Europe", "Status": "Scrambled", "Current Load": f"{round(95 - game['system_integrity'])}%"},
-        {"Region": "Azure Asia-South", "Status": "Scrambled", "Current Load": f"{round(90 - game['system_integrity'])}%"},
-    ])
-    st.dataframe(server_df, use_container_width=True, hide_index=True)
+    # --- INCIDENT 1 ---
+    with st.expander("🚨 INCIDENT #101: SCRAMBLED MICROSERVICE ROUTING MATRIX", expanded=("Routing Matrix" not in game["solved_incidents"])):
+        if "Routing Matrix" in game["solved_incidents"]:
+            st.success("✅ STATUS: RESOLVED AND PATCHED")
+        else:
+            st.markdown("**Deployment Notes:** Match each region to its correct service.")
+            with st.form("puzzle_1"):
+                node_us = st.selectbox("AWS US-East Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"], key="p1_us")
+                node_eu = st.selectbox("GCP Europe Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"], key="p1_eu")
+                node_asia = st.selectbox("Azure Asia-South Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"], key="p1_asia")
+                
+                if st.form_submit_button("[PATCH INCIDENT #101]"):
+                    if node_us == "Auth Service Shard" and node_eu == "Billing API" and node_asia == "Redis Cache":
+                        game["solved_incidents"].append("Routing Matrix")
+                        game["system_integrity"] = min(100.0, game["system_integrity"] + 15.0)
+                        game["team_score"] += 200
+                        game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [OK] Incident #101 patched by {st.session_state.username}.")
+                        format_success = True
+                        st.rerun()
+                    else:
+                        st.error("Patch failed! Check deployment notes again.")
 
-    st.markdown("---")
-    st.markdown("""
-    **Deployment Notes:**
-    1. AWS US-East runs the Auth Service Shard.
-    2. GCP Europe houses the Billing API.
-    3. Azure Asia-South runs the Redis Cache.
-    """)
-    
-    with st.form("puzzle_form"):
-        node_us = st.selectbox("AWS US-East Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"])
-        node_eu = st.selectbox("GCP Europe Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"])
-        node_asia = st.selectbox("Azure Asia-South Node runs:", ["Auth Service Shard", "Billing API", "Redis Cache", "AI Inference Engine"])
-        
-        submit_puzzle = st.form_submit_button("[VERIFY ROUTING FIX]")
-        if submit_puzzle:
-            if node_us == "Auth Service Shard" and node_eu == "Billing API" and node_asia == "Redis Cache":
-                game["system_integrity"] = min(100.0, game["system_integrity"] + 20.0)
-                game["team_score"] += 250
-                game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [OK] Routing puzzle successfully restored by {st.session_state.username}.")
-                st.success("GREAT JOB: Microservice architecture restored! +250 Points and Cluster Health repaired.")
-            else:
-                game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [X] MISMATCH: Routing error triggered by {st.session_state.username}.")
-                st.error("NOT QUITE: Routing mismatch detected. Match the deployment notes directly!")
+    # --- INCIDENT 2 ---
+    with st.expander("🚨 INCIDENT #102: EXPIRED SSL SECURITY CERTIFICATE", expanded=("SSL Certificate" not in game["solved_incidents"])):
+        if "SSL Certificate" in game["solved_incidents"]:
+            st.success("✅ STATUS: RESOLVED AND PATCHED")
+        else:
+            st.markdown("**Security Alert:** The main load balancer certificate expired, causing browser warning screens for users.")
+            with st.form("puzzle_2"):
+                cert_choice = st.selectbox("Select the correct cryptographic protocol to deploy:", [
+                    "TLS v1.0 (Legacy Standard)", 
+                    "TLS v1.3 Secure Enclave Certificate", 
+                    "Plaintext HTTP Unencrypted Bundle", 
+                    "Self-Signed Test Certificate (Expired 2023)"
+                ])
+                if st.form_submit_button("[PATCH INCIDENT #102]"):
+                    if "TLS v1.3" in cert_choice:
+                        game["solved_incidents"].append("SSL Certificate")
+                        game["system_integrity"] = min(100.0, game["system_integrity"] + 15.0)
+                        game["team_score"] += 200
+                        game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [OK] Incident #102 patched by {st.session_state.username}.")
+                        st.rerun()
+                    else:
+                        st.error("Security audit rejected this certificate configuration!")
+
+    # --- INCIDENT 3 ---
+    with st.expander("🚨 INCIDENT #103: REDIS CACHE MEMORY LEAK", expanded=("Memory Leak" not in game["solved_incidents"])):
+        if "Memory Leak" in game["solved_incidents"]:
+            st.success("✅ STATUS: RESOLVED AND PATCHED")
+        else:
+            st.markdown("**Diagnostic Log:** One of our caching nodes is experiencing runaway memory allocation due to an infinite loop query.")
+            with st.form("puzzle_3"):
+                node_choice = st.selectbox("Select the faulty caching node to isolate and flush:", [
+                    "Redis-Cache-Node-01 (Primary US)", 
+                    "Redis-Cache-Node-02 (Backup EU)", 
+                    "Redis-Cache-Node-03 (Orphaned Test Cluster)"
+                ])
+                if st.form_submit_button("[PATCH INCIDENT #103]"):
+                    if "Node-03" in node_choice:
+                        game["solved_incidents"].append("Memory Leak")
+                        game["system_integrity"] = min(100.0, game["system_integrity"] + 20.0)
+                        game["team_score"] += 300
+                        game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [OK] Incident #103 patched by {st.session_state.username}.")
+                        st.rerun()
+                    else:
+                        st.error("Flush failed! That node contains critical production data.")
 
 # ==========================================
 # 8. VIEW 3: ACCUSATION & VOTING BOARD
@@ -318,7 +360,7 @@ elif nav_choice == "ACCUSATION & VOTING":
     st.markdown("# [DAILY ACCUSATION & SUSPICION BOARD]")
     st.markdown("---")
     st.markdown("""
-    Who do you think has been messing with the cluster logs and breaking builds? Cast your secret suspicion vote below and review where team suspicions lie!
+    Who do you think keeps re-scrambling our resolved incidents and triggering server glitches? Cast your secret suspicion vote below!
     """)
     
     with st.form("voting_form"):
