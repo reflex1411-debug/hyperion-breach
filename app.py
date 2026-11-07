@@ -247,12 +247,7 @@ if nav_choice == "MISSION CONTROL":
                 st.rerun()
         with col_h2:
             if game["act_2_active"]:
-                if st.button("[TRIGGER: ESCALATED IT ALERT]"):
-                    if game["defcon_level"] > 1:
-                        game["defcon_level"] -= 1
-                        game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [!] ALERT: Threat level escalated to DEFCON {game['defcon_level']}.")
-                        st.success("DEFCON escalated!")
-                        st.rerun()
+                st.info("💡 In Act 2, head to the **WOPR Console** tab to solve decryption riddles and lower DEFCON!")
             else:
                 if st.button("[RE-SCRAMBLE A RESOLVED INCIDENT]"):
                     if game["solved_incidents"]:
@@ -272,7 +267,7 @@ if nav_choice == "MISSION CONTROL":
             {"Stage": "Incident #1: Routing Matrix", "Status": "Active in Queue", "Difficulty": "Easy", "Playability": "Verified"},
             {"Stage": "Incident #2: SSL Cert Expiry", "Status": "Active in Queue", "Difficulty": "Medium", "Playability": "Verified"},
             {"Stage": "Incident #3: Memory Leak", "Status": "Active in Queue", "Difficulty": "Medium", "Playability": "Verified"},
-            {"Stage": "Act 2: WOPR Escalation", "Status": "Ready in Sidebar", "Difficulty": "High Tension", "Playability": "Toggle Controlled"},
+            {"Stage": "Act 2: Saboteur Riddle Decryption", "Status": "Ready in WOPR", "Difficulty": "High Tension", "Playability": "Active for Insiders"},
         ])
         st.dataframe(pipeline_df, use_container_width=True, hide_index=True)
 
@@ -303,7 +298,6 @@ elif nav_choice == "ACTIVE IT INCIDENTS (PUZZLES)":
                         game["system_integrity"] = min(100.0, game["system_integrity"] + 15.0)
                         game["team_score"] += 200
                         game["logs"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] - [OK] Incident #101 patched by {st.session_state.username}.")
-                        format_success = True
                         st.rerun()
                     else:
                         st.error("Patch failed! Check deployment notes again.")
@@ -412,7 +406,36 @@ elif nav_choice == "🚨 ACT 2: WOPR // NORAD CONSOLE":
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("### EMERGENCY OVERRIDES")
+        # --- SABOTEUR RIDDLE DECRYPTION TERMINAL ---
+        if st.session_state.is_saboteur:
+            st.markdown("---")
+            st.markdown("### 🔓 SABOTEUR DECRYPTION RIDDLE TERMINAL")
+            st.markdown("Solve tactical military riddles below to force DEFCON lower and secure victory for the insiders!")
+            
+            with st.form("saboteur_riddle_form"):
+                riddle_choice = st.selectbox("Select Encryption Protocol:", [
+                    "Protocol Alpha: What has to be broken before you can use it?",
+                    "Protocol Beta: I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
+                    "Protocol Gamma: What is full of holes but still holds water?"
+                ])
+                answer_input = st.text_input("Enter Decryption Answer:")
+                
+                if st.form_submit_button("[SUBMIT DECRYPTION KEY]"):
+                    ans = answer_input.strip().lower()
+                    if ("egg" in ans and "Alpha" in riddle_choice) or \
+                       ("echo" in ans and "Beta" in riddle_choice) or \
+                       ("sponge" in ans and "Gamma" in riddle_choice):
+                        if game["defcon_level"] > 1:
+                            game["defcon_level"] -= 1
+                            game["wopr_logs"].insert(0, f"> [!] OVERRIDE SUCCESSFUL: Saboteur decrypted launch vector. DEFCON dropped to {game['defcon_level']}.")
+                            st.success("Decryption successful! DEFCON level dropped.")
+                            st.rerun()
+                        else:
+                            st.warning("DEFCON is already at 1! Maximum threat achieved.")
+                    else:
+                        st.error("Decryption failed! Incorrect answer.")
+        
+        st.markdown("### EMERGENCY OVERRIDES (ENGINEERS)")
         if st.button("[RESTORE DEFCON LEVEL]"):
             if game["defcon_level"] < 5:
                 game["defcon_level"] += 1
